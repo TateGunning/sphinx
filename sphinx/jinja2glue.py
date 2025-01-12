@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 import os
-from os import path
+import os.path
 from pprint import pformat
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from jinja2 import BaseLoader, FileSystemLoader, TemplateNotFound
 from jinja2.sandbox import SandboxedEnvironment
@@ -18,6 +18,7 @@ from sphinx.util.osutil import _last_modified_time
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterator
+    from typing import Any
 
     from jinja2.environment import Environment
 
@@ -127,12 +128,12 @@ class SphinxFileSystemLoader(FileSystemLoader):
             legacy_template = None
 
         for searchpath in self.searchpath:
-            filename = path.join(searchpath, template)
+            filename = os.path.join(searchpath, template)
             f = open_if_exists(filename)
             if f is not None:
                 break
             if legacy_template is not None:
-                filename = path.join(searchpath, legacy_template)
+                filename = os.path.join(searchpath, legacy_template)
                 f = open_if_exists(filename)
                 if f is not None:
                     break

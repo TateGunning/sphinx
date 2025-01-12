@@ -2,7 +2,11 @@ from __future__ import annotations
 
 import hashlib
 import os.path
-from typing import Any
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from collections.abc import Set
+    from typing import Any
 
 
 class FilenameUniqDict(dict[str, tuple[set[str], str]]):
@@ -37,7 +41,7 @@ class FilenameUniqDict(dict[str, tuple[set[str], str]]):
                 self._existing.discard(unique)
 
     def merge_other(
-        self, docnames: set[str], other: dict[str, tuple[set[str], Any]]
+        self, docnames: Set[str], other: dict[str, tuple[set[str], Any]]
     ) -> None:
         for filename, (docs, _unique) in other.items():
             for doc in docs & set(docnames):
@@ -73,7 +77,7 @@ class DownloadFiles(dict[str, tuple[set[str], str]]):
                 del self[filename]
 
     def merge_other(
-        self, docnames: set[str], other: dict[str, tuple[set[str], Any]]
+        self, docnames: Set[str], other: dict[str, tuple[set[str], Any]]
     ) -> None:
         for filename, (docs, _dest) in other.items():
             for docname in docs & set(docnames):

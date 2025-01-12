@@ -5,14 +5,14 @@ from __future__ import annotations
 import contextlib
 import html
 import os
+import os.path
 import posixpath
 import re
 import shutil
 import sys
 import warnings
-from os import path
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 from urllib.parse import quote
 
 import docutils.readers.doctree
@@ -20,7 +20,6 @@ from docutils import nodes
 from docutils.core import Publisher
 from docutils.frontend import OptionParser
 from docutils.io import DocTreeInput, StringOutput
-from docutils.utils import relative_path
 
 from sphinx import __display_version__, package_dir
 from sphinx import version_info as sphinx_version
@@ -56,6 +55,7 @@ from sphinx.util.matching import DOTFILES, Matcher, patmatch
 from sphinx.util.osutil import (
     SEP,
     _last_modified_time,
+    _relative_path,
     copyfile,
     ensuredir,
     relative_uri,
@@ -65,7 +65,7 @@ from sphinx.writers.html5 import HTML5Translator
 
 if TYPE_CHECKING:
     from collections.abc import Iterator, Set
-    from typing import TypeAlias
+    from typing import Any, TypeAlias
 
     from docutils.nodes import Node
     from docutils.readers import Reader
@@ -496,9 +496,9 @@ class StandaloneHTMLBuilder(Builder):
         favicon = self.config.html_favicon or ''
 
         if not is_url(logo):
-            logo = path.basename(logo)
+            logo = os.path.basename(logo)
         if not is_url(favicon):
-            favicon = path.basename(favicon)
+            favicon = os.path.basename(favicon)
 
         self.relations = self.env.collect_relations()
 
@@ -673,6 +673,7 @@ class StandaloneHTMLBuilder(Builder):
         metatags = self.docwriter.clean_meta
 
         ctx = self.get_doc_context(docname, body, metatags)
+        ctx['has_maths_elements'] = self.docwriter._has_maths_elements
         self.handle_page(docname, ctx, event_arg=doctree)
 
     def write_doc_serialized(self, docname: str, doctree: nodes.document) -> None:
@@ -771,7 +772,7 @@ class StandaloneHTMLBuilder(Builder):
 
     def copy_image_files(self) -> None:
         if self.images:
-            stringify_func = ImageAdapter(self.app.env).get_original_image_uri
+            stringify_func = ImageAdapter(self.env).get_original_image_uri
             ensuredir(self._images_dir)
             for src in status_iterator(
                 self.images,
@@ -795,7 +796,7 @@ class StandaloneHTMLBuilder(Builder):
 
     def copy_download_files(self) -> None:
         def to_relpath(f: str) -> str:
-            return relative_path(self.srcdir, f)
+            return _relative_path(Path(f), self.srcdir).as_posix()
 
         # copy downloadable files
         if self.env.dlfiles:
@@ -1508,9 +1509,6 @@ def setup(app: Sphinx) -> ExtensionMetadata:
 
     # load default math renderer
     app.setup_extension('sphinx.ext.mathjax')
-
-    # load transforms for HTML builder
-    app.setup_extension('sphinx.builders.html.transforms')
 
     return {
         'version': 'builtin',

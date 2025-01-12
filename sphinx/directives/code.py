@@ -3,7 +3,7 @@ from __future__ import annotations
 import sys
 import textwrap
 from difflib import unified_diff
-from typing import TYPE_CHECKING, Any, ClassVar
+from typing import TYPE_CHECKING
 
 from docutils import nodes
 from docutils.parsers.rst import directives
@@ -18,6 +18,7 @@ from sphinx.util.docutils import SphinxDirective
 
 if TYPE_CHECKING:
     import os
+    from typing import Any, ClassVar
 
     from docutils.nodes import Element, Node
 
@@ -48,7 +49,7 @@ class Highlight(SphinxDirective):
         linenothreshold = self.options.get('linenothreshold', sys.maxsize)
         force = 'force' in self.options
 
-        self.env.temp_data['highlight_language'] = language
+        self.env.current_document.highlight_language = language
         return [
             addnodes.highlightlang(
                 lang=language, force=force, linenothreshold=linenothreshold
@@ -159,8 +160,9 @@ class CodeBlock(SphinxDirective):
             # no highlight language specified.  Then this directive refers the current
             # highlight setting via ``highlight`` directive or ``highlight_language``
             # configuration.
-            literal['language'] = self.env.temp_data.get(
-                'highlight_language', self.config.highlight_language
+            literal['language'] = (
+                self.env.current_document.highlight_language
+                or self.config.highlight_language
             )
         extra_args = literal['highlight_args'] = {}
         if hl_lines is not None:
@@ -223,10 +225,10 @@ class LiteralIncludeReader:
         try:
             with open(filename, encoding=self.encoding, errors='strict') as f:
                 text = f.read()
-                if 'tab-width' in self.options:
-                    text = text.expandtabs(self.options['tab-width'])
+            if 'tab-width' in self.options:
+                text = text.expandtabs(self.options['tab-width'])
 
-                return text.splitlines(True)
+            return text.splitlines(True)
         except OSError as exc:
             msg = __("Include file '%s' not found or reading it failed") % filename
             raise OSError(msg) from exc

@@ -4,16 +4,17 @@ import os
 import shutil
 import sys
 import warnings
-from typing import IO, TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from sphinx.deprecation import RemovedInSphinx90Warning
 
 if TYPE_CHECKING:
     import builtins
     from collections.abc import Callable
+    from typing import IO, Any
 
 warnings.warn(
-    "'sphinx.testing.path' is deprecated. " "Use 'os.path' or 'pathlib' instead.",
+    "'sphinx.testing.path' is deprecated. Use 'os.path' or 'pathlib' instead.",
     RemovedInSphinx90Warning,
     stacklevel=2,
 )
@@ -32,7 +33,7 @@ def getumask() -> int:
 UMASK = getumask()
 
 
-class path(str):
+class path(str):  # NoQA: FURB189
     """
     Represents a path which behaves like a string.
     """
@@ -157,7 +158,7 @@ class path(str):
         os.utime(self, arg)
 
     def open(self, mode: str = 'r', **kwargs: Any) -> IO[str]:
-        return open(self, mode, **kwargs)  # NoQA: SIM115
+        return open(self, mode, **kwargs)
 
     def write_text(self, text: str, encoding: str = 'utf-8', **kwargs: Any) -> None:
         """

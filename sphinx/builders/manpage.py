@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
+import os.path
 import warnings
-from os import path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from docutils.frontend import OptionParser
 from docutils.io import FileOutput
@@ -21,6 +21,7 @@ from sphinx.writers.manpage import ManualPageTranslator, ManualPageWriter
 
 if TYPE_CHECKING:
     from collections.abc import Set
+    from typing import Any
 
     from sphinx.application import Sphinx
     from sphinx.config import Config
@@ -44,10 +45,7 @@ class ManualPageBuilder(Builder):
     def init(self) -> None:
         if not self.config.man_pages:
             logger.warning(
-                __(
-                    'no "man_pages" config value found; no manual pages '
-                    'will be written'
-                )
+                __('no "man_pages" config value found; no manual pages will be written')
             )
 
     def get_outdated_docs(self) -> str | list[str]:
@@ -73,7 +71,7 @@ class ManualPageBuilder(Builder):
             docname, name, description, authors, section = info
             if docname not in self.env.all_docs:
                 logger.warning(
-                    __('"man_pages" config value references unknown ' 'document %s'),
+                    __('"man_pages" config value references unknown document %s'),
                     docname,
                 )
                 continue
@@ -90,14 +88,15 @@ class ManualPageBuilder(Builder):
 
             if self.config.man_make_section_directory:
                 dirname = 'man%s' % section
-                ensuredir(path.join(self.outdir, dirname))
+                ensuredir(os.path.join(self.outdir, dirname))
                 targetname = f'{dirname}/{name}.{section}'
             else:
                 targetname = f'{name}.{section}'
 
             logger.info(darkgreen(targetname) + ' { ')
             destination = FileOutput(
-                destination_path=path.join(self.outdir, targetname), encoding='utf-8'
+                destination_path=os.path.join(self.outdir, targetname),
+                encoding='utf-8',
             )
 
             tree = self.env.get_doctree(docname)
